@@ -1,0 +1,22 @@
+sudo: required
+services: 
+  - docker
+
+before_install:
+  - docker build -t yimd85/react-test -f ./client/Dockerfile.dev ./client
+
+script: 
+  - docker run yimd85/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t yimd85/multi-client ./client
+  - docker build -t yimd85/multi-nginx ./nginx
+  - docker build -t yimd85/multi-server ./server
+  - docker build -t yimd85/multi-worker ./worker
+  # log into the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "DOCKER_ID" --password-stdin
+  # takes those images and puts them into docker hub
+  - docker push yimd85/multi-client
+  - docker push yimd85/multi-nginx
+  - docker push yimd85/multi-server
+  - docker push yimd85/multi-worker
